@@ -50,14 +50,15 @@ def start(num_users, base_dir='./', session_name="jupyter"):
         token = random.getrandbits(128)
         if i == 0:
             server.new_session(session_name=session_name,
-                               window_command=f"jupyter notebook --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
+                               window_command=f"jupyter notebook --allow-root --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
                                start_directory=f"{base_dir}dir{i}")
             session = server.sessions.get(session_name=session_name)
+            print(session)
         else:
             session.new_window(attach=False,
-                               window_shell=f"jupyter notebook --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
+                               window_shell=f"jupyter notebook --allow-root --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
                                start_directory=f"{base_dir}dir{i}")
-            click.echo(f"jupyter notebook number {i}: port {PORT + i}, token {token}")
+        click.echo(f"jupyter notebook number {i}: port {PORT + i}, token {token}")
 
 
 @click.command()
