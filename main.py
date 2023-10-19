@@ -1,8 +1,9 @@
-import libtmux
 import os
-import tqdm
 import random
+
 import click
+import libtmux
+import tqdm
 
 PORT = 2222
 
@@ -31,7 +32,7 @@ def start(num_users, base_dir='./', session_name="jupyter"):
     if num_users <= 0:
         # raise ValueError("Number of notebooks is positive.")
         print("Number of notebooks is positive.")
-        return 
+        return
     base_dir = base_dir + "/" if base_dir[-1] != '/' else base_dir
     if not os.path.exists(base_dir):
         # raise ValueError("No such base directory. ")
@@ -42,22 +43,27 @@ def start(num_users, base_dir='./', session_name="jupyter"):
         # raise RuntimeWarning("The session with jupyter notebooks is already running, the notebooks are deployed.")
         print("The session with jupyter notebooks is already running, the notebooks are deployed.")
         return
-    server.new_session(session_name=session_name, start_directory=base_dir)
-    session = server.sessions.get(session_name=session_name)
+    session = None
     for i in tqdm.trange(num_users):
         if not os.path.exists(f"{base_dir}dir{i}"):
             os.makedirs(f"{base_dir}dir{i}")
         token = random.getrandbits(128)
-        session.new_window(attach=False, window_name=f"notebook {i}",
-                           window_shell=f"jupyter notebook --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
-                           start_directory=f"{base_dir}dir{i}")
-        click.echo(f"jupyter notebook number {i}: port {PORT + i}, token {token}")
-    session.kill_window("0")
+        if i == 0:
+            server.new_session(session_name=session_name,
+                               window_command=f"jupyter notebook --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
+                               start_directory=f"{base_dir}dir{i}")
+            session = server.sessions.get(session_name=session_name)
+        else:
+            session.new_window(attach=False,
+                               window_shell=f"jupyter notebook --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
+                               start_directory=f"{base_dir}dir{i}")
+            click.echo(f"jupyter notebook number {i}: port {PORT + i}, token {token}")
 
 
 @click.command()
 @click.argument("num", type=click.INT)
-@click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения", type=click.STRING)
+@click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения",
+              type=click.STRING)
 def stop(session_name, num):
     """
     @:param session_name: Названия tmux-сессии, в которой запущены окружения
@@ -65,7 +71,7 @@ def stop(session_name, num):
     """
     try:
         session = connect_to_session(session_name)
-        session.kill_window(f"notebook {num}")
+        session.kill_window(f"{num}")
     except RuntimeWarning as ex:
         print(ex)
     except libtmux.exc.LibTmuxException as ex:
@@ -73,7 +79,8 @@ def stop(session_name, num):
 
 
 @click.command(name="stop_all")
-@click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения", type=click.STRING)
+@click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения",
+              type=click.STRING)
 def stop_all(session_name):
     """
     @:param session_name: Названия tmux-сессии, в которой запущены окружения
