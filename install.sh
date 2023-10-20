@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-sudo apt install python3
-sudo apt install jupyter-core
-pip install libtmux
-pip install tqdm
-pip install click
+apt-get update
+apt-get -y updrade
+apt-get install -y tmux
+apt-get install python3
+python -m pip install jupyter
+python -m pip install libtmux
+python -m pip install tqdm
+python -m pip install click
