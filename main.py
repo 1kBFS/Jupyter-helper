@@ -25,7 +25,7 @@ def cli():
 @click.argument("num_users", type=click.INT)
 @click.option("--base-dir", default="./", help="рабочая директория")
 @click.option("--session-name", default="jupyter", help="название сессии")
-def start(num_users, base_dir='./', session_name="jupyter"):
+def start(num_users: int, base_dir='./', session_name="jupyter") -> None:
     """
     Запустить $num_users ноутбуков. У каждого рабочая директория $base_dir+$folder_num
     """
@@ -48,16 +48,14 @@ def start(num_users, base_dir='./', session_name="jupyter"):
         if not os.path.exists(f"{base_dir}dir{i}"):
             os.makedirs(f"{base_dir}dir{i}")
         token = random.getrandbits(128)
+        jupyter_run_command = f"jupyter notebook --allow-root --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}"
         if i == 0:
             server.new_session(session_name=session_name,
-                               window_command=f"jupyter notebook --allow-root --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
-                               start_directory=f"{base_dir}dir{i}")
+                               start_directory=f"{base_dir}dir{i}").attached_pane.send_keys(cmd=jupyter_run_command)
             session = server.sessions.get(session_name=session_name)
-            print(session)
         else:
             session.new_window(attach=False,
-                               window_shell=f"jupyter notebook --allow-root --port {PORT + i} --no-browser --NotebookApp.token={token} --NotebookApp.notebook_dir={base_dir}dir{i}",
-                               start_directory=f"{base_dir}dir{i}")
+                               start_directory=f"{base_dir}dir{i}").attached_pane.send_keys(cmd=jupyter_run_command)
         click.echo(f"jupyter notebook number {i}: port {PORT + i}, token {token}")
 
 
@@ -65,7 +63,7 @@ def start(num_users, base_dir='./', session_name="jupyter"):
 @click.argument("num", type=click.INT)
 @click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения",
               type=click.STRING)
-def stop(session_name, num):
+def stop(session_name: str, num: int) -> None:
     """
     @:param session_name: Названия tmux-сессии, в которой запущены окружения
     @:param num: номер ноутбука, кот. можно убить
@@ -82,7 +80,7 @@ def stop(session_name, num):
 @click.command(name="stop_all")
 @click.option("--session-name", default="jupyter", help="Названия tmux-сессии, в которой запущены окружения",
               type=click.STRING)
-def stop_all(session_name):
+def stop_all(session_name: str) -> None:
     """
     @:param session_name: Названия tmux-сессии, в которой запущены окружения
     """
